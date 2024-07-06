@@ -1,0 +1,250 @@
+
+
+
+
+
+import SwiftUI
+import WebKit
+
+// Define a data model for fighters
+struct Fighter: Identifiable, Hashable {
+    let id = UUID() // Conform to Identifiable
+    let name: String
+    let imageName: String
+    let imageName2: String
+    let imageName3: String
+    let biography: String
+    let record: String
+    let weightClass: String
+    let youtubeURL: String
+    
+    // Computed property to get the last name for sorting
+    var lastName: String {
+        return name.components(separatedBy: " ").last ?? ""
+    }
+}
+
+// Define a list of fighters
+let fighters: [Fighter] = [
+    Fighter(name: "Sean O'Malley", imageName: "sm", imageName2: "sm2", imageName3: "smstats",biography: "Sean O'Malley is an American mixed martial artist...", record: "15-1-0", weightClass: "Bantamweight", youtubeURL: "https://www.youtube.com/embed/6g2P1V6aCEs"),
+    Fighter(name: "Sean Strickland", imageName: "ss", imageName2: "ss2", imageName3: "sstats", biography: "Sean Strickland is a professional mixed martial artist...", record: "23-3-0", weightClass: "Middleweight", youtubeURL: "https://www.youtube.com/embed/pM-Hydo6EtA"),
+    Fighter(name: "Alex Pereira", imageName: "ap", imageName2: "ap2", imageName3: "apstats", biography: "Alex Pereira is a Brazilian mixed martial artist...", record: "4-1-0", weightClass: "Middleweight", youtubeURL: "https://www.youtube.com/embed/ykTsOdbQjPo"),
+    Fighter(name: "Conor McGregor", imageName: "cm", imageName2: "cm2", imageName3: "mcstats", biography: "Conor McGregor is an Irish professional mixed martial artist...", record: "22-6-0", weightClass: "Lightweight", youtubeURL: "https://www.youtube.com/embed/3mPPMCa8Nxw"),
+    Fighter(name: "Charles Oliveira", imageName: "co", imageName2: "co2", imageName3: "costats",  biography: "Charles Oliveira is a Brazilian mixed martial artist...", record: "31-8-0", weightClass: "Lightweight", youtubeURL: "https://www.youtube.com/embed/nh80a_lKljU"),
+    Fighter(name: "Jon Jones", imageName: "jj", imageName2: "jj2", imageName3: "jjstats", biography: "Jon Jones is an American mixed martial artist...", record: "26-1-0", weightClass: "Light Heavyweight", youtubeURL: "https://www.youtube.com/embed/VXvg4ioc0wQ"),
+    Fighter(name: "Tom Aspinall", imageName: "ta", imageName2: "ta2", imageName3: "tastats", biography: "Jon Jones is an American mixed martial artist...", record: "26-1-0", weightClass: "Heavyweight", youtubeURL: "https://www.youtube.com/embed/pV1ll_x0wcY"),
+    Fighter(name: "Dustin Poirier", imageName: "dp", imageName2: "dp2", imageName3: "dpstats", biography: "Jon Jones is an American mixed martial artist...", record: "26-1-0", weightClass: "Lightweight", youtubeURL: "https://www.youtube.com/embed/71RyH3LbzOc"),
+    Fighter(name: "Jiri Prochazka", imageName: "jp", imageName2: "jp2", imageName3: "jpstats", biography: "Jon Jones is an American mixed martial artist...", record: "26-1-0", weightClass: "Light heavyweight", youtubeURL: "https://www.youtube.com/embed/jtSODFEVKpI"),
+    Fighter(name: "Israel Adesanya", imageName: "ia", imageName2: "ia2", imageName3: "iastats", biography: "Jon Jones is an American mixed martial artist...", record: "26-1-0", weightClass: "Middleweight", youtubeURL: "https://www.youtube.com/embed/7kPYnUg8i-M"),
+    Fighter(name: "Justin Gaethje", imageName: "jg", imageName2: "jg2", imageName3: "jgstats", biography: "Jon Jones is an American mixed martial artist...", record: "26-1-0", weightClass: "Lightweight", youtubeURL: "https://www.youtube.com/embed/1AN7-M65bkI"),
+    Fighter(name: "Tony Ferguson", imageName: "tf", imageName2: "tf2", imageName3: "tfstats", biography: "Jon Jones is an American mixed martial artist...", record: "26-1-0", weightClass: "Lightweight", youtubeURL: "https://www.youtube.com/embed/o8Mb4eOroNo"),
+    Fighter(name: "Alexander Volkanovski", imageName: "av", imageName2: "av2", imageName3: "avstats", biography: "Jon Jones is an American mixed martial artist...", record: "26-1-0", weightClass: "Featherweight", youtubeURL: "https://www.youtube.com/embed/cWq0JMxbPko")
+]
+
+// ContentView
+struct ContentView: View {
+    // Define sorting options
+    enum SortOption: String, CaseIterable {
+        case alphabetical = "Alphabetical"
+        case byWeight = "By Weight"
+    }
+    
+    @State private var selectedSortOption = SortOption.alphabetical
+    @State private var fightersList = fighters
+    @State private var searchText = ""
+    @FocusState private var isSearchFieldFocused: Bool // Add this property
+    
+    // Define the correct weight class order
+    private let weightClassOrder: [String] = [
+        "Flyweight", "Bantamweight", "Featherweight", "Lightweight",
+        "Welterweight", "Middleweight", "Light Heavyweight", "Heavyweight"
+    ]
+    
+    var body: some View {
+        NavigationView {
+            ScrollView {
+                VStack(spacing: 5) {
+                    // UFC logo on top
+                    Image("ufclogo 1")
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(maxWidth: .infinity, maxHeight: 100)
+                    ZStack(alignment: .leading) {
+                                   if searchText.isEmpty {
+                                       Text("Search for a fighter")
+                                           .foregroundColor(.white) // Set your placeholder text color here
+                                           .padding(.leading, 35)
+                                           .onTapGesture { // Handle tap to focus
+                                                                   isSearchFieldFocused = true
+                                                               }
+                                   }
+                        TextField("", text: $searchText)
+                            .foregroundColor(.white) // Set the typing text color here
+                            .padding()
+                            .background(Color.gray.opacity(0.2))
+                            .cornerRadius(8)
+                            .padding(.horizontal)
+                            .focused($isSearchFieldFocused) // Bind the focus state
+                               }
+                    // Search bar
+                    // Dropdown menu for sorting
+                    Menu {
+                        Button(action: {
+                            self.selectedSortOption = .alphabetical
+                        }) {
+                            HStack {
+                                Text(SortOption.alphabetical.rawValue)
+                                    .font(.custom("Fontspring-DEMO-allotrope-black", size: 14)) // Use your custom font here
+//            this worked                        .font(.system(size: 14, weight: .regular))
+                                Spacer()
+                                if selectedSortOption == .alphabetical {
+                                    Image(systemName: "chevron.down")
+                                        .foregroundColor(.white)
+                                }
+                            }
+                            .padding(.vertical, 8)
+                            .padding(.horizontal, 16)
+                        }
+                        .background(Color.gray)
+                        .cornerRadius(8)
+                        
+                        Button(action: {
+                            self.selectedSortOption = .byWeight
+                        }) {
+                            HStack {
+                                Text(SortOption.byWeight.rawValue)
+                                    .font(.system(size: 14, weight: .regular))
+                                Spacer()
+                                if selectedSortOption == .byWeight {
+                                    Image(systemName: "chevron.down")
+                                        .foregroundColor(.white)
+                                }
+                            }
+                            .padding(.vertical, 8)
+                            .padding(.horizontal, 16)
+                        }
+                        .background(Color.gray)
+                        .cornerRadius(8)
+                    } label: {
+                        HStack {
+                            Text(selectedSortOption.rawValue)
+                                .font(.system(size: 14, weight: .regular))
+                                .foregroundColor(.white)
+                                .padding(.vertical, 8)
+                                .padding(.horizontal, 16)
+                            Image(systemName: "chevron.down")
+                                .foregroundColor(.white)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .background(Color.gray)
+                        .cornerRadius(8)
+                    }
+                    .padding()
+                    
+                    // Display fighters based on selected sorting and search query
+                    ForEach(filteredFighters.sorted(by: sortFunction)) { fighter in
+                        VStack {
+                            NavigationLink(destination: FighterDetailView(fighter: fighter)) {
+                                VStack {
+                                    Image(fighter.imageName)
+                                        .resizable()
+                                        .aspectRatio(contentMode: .fill)
+                                        .frame(maxWidth: .infinity, maxHeight: 200)
+                                        .cornerRadius(0) // Make the images square
+                                }
+                            }
+                            .background(Color.black) // Set each item's background to black
+                        }
+                        .background(Color.black) // Set each item's background to black
+                    }
+                }
+                .background(Color.black) // Set the list background to black
+            }
+            .background(Color.black) // Set entire background color to black
+            .navigationBarTitle("", displayMode: .inline) // Remove title
+        }
+    }
+    
+    // Function to determine sorting logic
+    private func sortFunction(_ fighter1: Fighter, _ fighter2: Fighter) -> Bool {
+        switch selectedSortOption {
+        case .alphabetical:
+            return fighter1.lastName < fighter2.lastName
+        case .byWeight:
+            // Sort based on the predefined weight class order
+            let weightIndex1 = weightClassOrder.firstIndex(of: fighter1.weightClass) ?? Int.max
+            let weightIndex2 = weightClassOrder.firstIndex(of: fighter2.weightClass) ?? Int.max
+            return weightIndex1 < weightIndex2
+        }
+    }
+    
+    // Computed property to get filtered fighters based on search query
+    private var filteredFighters: [Fighter] {
+        if searchText.isEmpty {
+            return fightersList
+        } else {
+            return fightersList.filter { $0.name.lowercased().contains(searchText.lowercased()) }
+        }
+    }
+}
+
+// Fighter Detail View
+struct FighterDetailView: View {
+    let fighter: Fighter
+    
+    var body: some View {
+        ScrollView {  // Use ScrollView to allow vertical scrolling
+            VStack(spacing: 0) {
+                Image(fighter.imageName2)
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)  // Use .fit to ensure the whole image is visible
+                // was 300
+                    .frame(width: 420, height: 300)
+                    .cornerRadius(10)
+                   // .offset(y: -50)
+                
+                WebView(urlString: fighter.youtubeURL)
+                    .frame(height: 250)
+                    .cornerRadius(10)
+                    .background(Color.black)
+                
+                Image(fighter.imageName3)
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)  // Use .fit to ensure the whole image is visible
+                    .frame(width: 800, height: 600)
+                    .cornerRadius(10)
+            }
+           // .padding(.top, 10) // Add some padding to the top if needed
+            .padding([.leading, .trailing], 10) // Add horizontal padding for better alignment
+            .background(Color.black) // Background color for the VStack
+        }
+        .background(Color.black) // Set the ScrollView's background color to black
+        .navigationBarTitle(fighter.name, displayMode: .inline)
+    }
+}
+
+// WebView component to display YouTube video
+struct WebView: UIViewRepresentable {
+    let urlString: String
+    
+    func makeUIView(context: Context) -> WKWebView {
+        return WKWebView()
+    }
+    
+    func updateUIView(_ uiView: WKWebView, context: Context) {
+        uiView.backgroundColor = UIColor.black // Set background color to black
+        
+        if let url = URL(string: urlString) {
+            let request = URLRequest(url: url)
+            uiView.load(request)
+        }
+    }
+}
+
+// Preview
+struct ContentView_Previews: PreviewProvider {
+    static var previews: some View {
+        ContentView()
+    }
+}
+
